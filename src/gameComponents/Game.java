@@ -11,12 +11,15 @@ public class Game {
 		Player b;
 		List<Slot> history;
 		Set<Slot> availableSlots;
+		boolean aFirst;
+		
 	
 	public Game (Player a, Player b) {
 		this.a = a;
 		this.b = b;
 		this.history = new LinkedList<Slot>();
 		this.availableSlots = initialSlots();
+		this.aFirst = AGoesFirst();
 	}
 	
 	public Set<Slot> initialSlots() {
@@ -28,19 +31,37 @@ public class Game {
 		return init;
 	}
 	
-	public Player firstToGo() {
+	public boolean AGoesFirst() {
 		double chance = Math.random();
-		System.out.println(chance);
 		if (chance > 0.5) {
-			return this.a;
+			return true;
 		}
 		else {
-			return this.b;
+			return false;
 		}
 	}
 	
 	public void startGame() {
-		
+		while (!this.a.win && !this.b.win && this.availableSlots.size() != 0){
+			if (this.aFirst) {
+				this.a.addSlot(getSlotByInt(this.a.selectSlot()));
+				this.b.addSlot(getSlotByInt(this.b.selectSlot()));
+			}
+			else {
+				this.b.addSlot(getSlotByInt(this.b.selectSlot()));
+				this.a.addSlot(getSlotByInt(this.a.selectSlot()));
+			}
+		}
+	}
+	
+	public Slot getSlotByInt(int i) {
+		Slot ans = new Slot(0,false);
+		for (Slot slot: this.availableSlots) {
+			if (slot.slotPosition == i) {
+				ans = slot;
+			}
+		}
+		return ans;
 	}
 	
 	public static void main(String[] args) {
@@ -48,7 +69,6 @@ public class Game {
 		Player a = new Player("a",false);
 		Player b = new Player("b",false);
 		Game k = new Game (a,b);
-		k.firstToGo();
 	}
 
 }

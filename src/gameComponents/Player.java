@@ -22,9 +22,12 @@ public class Player {
 	}
 	
 	public void addSlot(Slot slot) {
+		if (!slot.taken) {
 		this.possessedSlots.add(slot);
 		slot.setTaken(true);
 		this.win = checkWin();
+		System.out.println("Player " + this.name + " took Slot " + slot.slotPosition + ".");
+		}
 	}
 	
 	public void printSlots() {
@@ -85,6 +88,19 @@ public class Player {
 		}
 		return flag;
 	}
+	public List<Integer> SlotPriorities() {
+		List<Integer> prior = new LinkedList<Integer>();
+		if (this.possessedSlots.size() == 0) { 				//initial move
+			int[] appInWinset = {0,3,2,3,2,4,2,3,2,3};
+			int max = getMax(appInWinset);
+			prior.addAll(PointersByValue(max, appInWinset));
+		}
+		if (this.possessedSlots.size() == 1) {
+			
+		}
+		return prior;
+	}
+	
 	
 	public int selectSlot() {
 		if (this.possessedSlots.size() == 0 && this.opponentSlots.size() == 0) { 				//initial move
@@ -104,6 +120,8 @@ public class Player {
 			return slotNumber;
 		}
 		else {																					//mid-game move
+			int[] myRatings = rateSlots(this.possessedSlots);
+			int[] opponentRatings = rateSlots(this.opponentSlots);
 			return 0;
 		}
 	}
@@ -123,18 +141,40 @@ public class Player {
 		return ratings;
 	}
 	
-	public int randomIntSelect(int range) {
-		double chance = Math.random()*range;
-		return (int)(chance);
+	public List<Integer> PointersByValue (int val, int[] values){
+		List<Integer> ans = new LinkedList<Integer>();
+		int max = 0;
+		for (int i = 0; i < values.length; i++) {
+			if (values[i] == val) {
+				ans.add(i);
+			}
+		}
+		return ans;
 	}
+	
+	public int getMax(int[] values) {
+		int max = 0;
+		for (int i = 0; i < values.length; i++) {
+			if (max < values[i]) {
+				max = values[i];
+			}
+		}
+		return max;
+	}
+	
+	public void mixAndAdd(List<Integer> addTo, List<Integer> addThis) {
+		List<Integer> mixer = new LinkedList<Integer>();
+		
+	}
+	
 	
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Player k = new Player("k",false);
-		k.addSlot(new Slot(9,false));
 		k.addSlot(new Slot(5,false));
-		k.addSlot(new Slot(3,false));
+		k.addSlot(new Slot(1,false));
+		//k.addSlot(new Slot(3,false));
 		k.rateSlots(k.possessedSlots);
 
 

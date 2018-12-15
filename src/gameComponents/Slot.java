@@ -74,13 +74,6 @@ public class Slot {
 	
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		Slot k = new Slot(5, false);
-		int[] p = k.slotRelations();
-		for (int i = 0; i < p.length; i++) {
-			System.out.println(p[i]);
-		}
-		k.getWinSet();
-	}
 
+	}
 }

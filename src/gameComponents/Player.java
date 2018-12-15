@@ -1,6 +1,5 @@
 package gameComponents;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -9,14 +8,14 @@ import java.util.Set;
 public class Player {
 	
 	String name;
-	boolean auto;
+	boolean first;
 	boolean win;
 	LinkedList<Slot> possessedSlots;
 	LinkedList<Slot> opponentSlots;
 	
 	public Player (String name, boolean auto) {
 		this.name = name;
-		this.auto = auto;
+		this.first = false;
 		this.win = false;
 		this.possessedSlots = new LinkedList<Slot>();
 		this.opponentSlots = new LinkedList<Slot>();
@@ -27,7 +26,6 @@ public class Player {
 			this.possessedSlots.add(slot);
 			slot.setTaken(true);
 			this.win = checkWin();
-			System.out.println("Player " + this.name + " took Slot " + slot.slotPosition + ".");
 			return true;
 		}
 		else {
@@ -54,6 +52,7 @@ public class Player {
 		winset.add(winset1);winset.add(winset2);winset.add(winset3);winset.add(winset4);winset.add(winset5);winset.add(winset6);winset.add(winset7);winset.add(winset8);
 		return winset;
 	}
+	
 	
 	public boolean checkWin() {
 		boolean flag = false;
@@ -94,7 +93,7 @@ public class Player {
 			}
 		}
 		if (flag) {
-			System.out.println("Player has won.");
+			System.out.println("Player " + this.name+ " has won.");
 		}
 		return flag;
 	}
@@ -112,6 +111,10 @@ public class Player {
 		}
 		if (this.possessedSlots.size() == 1) {
 			int max = getMax(this.possessedSlots.get(0).slotRelations());
+			if (!this.first) {
+				System.out.println("defense");
+				prior.addAll(defensiveMove());
+			}
 			for (int i = 0; i < max; i++) {
 				for (Integer a: randomMix(PointersByValue(max - i, this.possessedSlots.get(0).slotRelations())))
 					prior.add(a);
@@ -120,7 +123,12 @@ public class Player {
 		if (this.possessedSlots.size() >= 2) {
 			List<Integer> aligned = new LinkedList<Integer>(); 
 			List<Integer> superaligned = new LinkedList<Integer>();
-			for (Slot a : this.possessedSlots) {
+			List<Integer> defense = new LinkedList<Integer>();
+			List<Integer> other = new LinkedList<Integer>();
+			if (!this.first) {
+				defense = defensiveMove();
+			}
+ 			for (Slot a : this.possessedSlots) {
 				for (Slot b: this.possessedSlots) {
 					if (!a.equals(b) && isAligned(a,b)) {
 						for (Set<Integer> p : winsets) {
@@ -139,10 +147,39 @@ public class Player {
 					}
 				}
 			}
+			for (int u = 1; u <= 9; u++) {
+				if (!defense.contains(u) &&!superaligned.contains(u) && !aligned.contains(u)) {
+					other.add(u);
+				}
+			}
+			prior.addAll(defense);
 			prior.addAll(randomMix(superaligned));
 			prior.addAll(randomMix(aligned));
+			prior.addAll(randomMix(other));
 		}
 		return prior;
+	}
+	
+	public List<Integer> defensiveMove () {
+		List<Integer> defense = new LinkedList<Integer>();
+		Set<Set<Integer>> winsets = getWinset();
+		List<Integer> aligned = new LinkedList<Integer>();
+		for (Slot a : this.opponentSlots) {
+			for (Slot b: this.opponentSlots) {
+				if (!a.equals(b) && isAligned(a,b)) {
+					for (Set<Integer> p : winsets) {
+						if (p.contains(a.slotPosition) && p.contains(b.slotPosition)) {
+							p.remove(a.slotPosition); p.remove(b.slotPosition);
+							for(Integer q: p) {
+								aligned.add(q);
+							}
+						}
+					}
+				}
+			}
+		}
+		defense.addAll(aligned);
+		return defense;
 	}
 	
 	
@@ -163,7 +200,6 @@ public class Player {
 	
 	public List<Integer> PointersByValue (int val, int[] values){
 		List<Integer> ans = new LinkedList<Integer>();
-		int max = 0;
 		for (int i = 0; i < values.length; i++) {
 			if (values[i] == val) {
 				ans.add(i);
@@ -263,25 +299,18 @@ public class Player {
 		return flag;
 	}
 	
+	public static void printSlots(List<Slot> a) {
+		String hist = "[ ";
+		for (Slot s: a) {
+			hist = hist + s.slotPosition + ", "; 
+		}
+		hist = hist + "]";
+		System.out.println(hist);
+	}
+	
 	
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		Player k = new Player("k",false);
-		k.addSlot(new Slot(5,false));
-		k.addSlot(new Slot(1,false));
-		k.addSlot(new Slot(7,false));
-		k.addSlot(new Slot(8,false));
-		System.out.println(k.SlotPriorities());
-		
-		//k.addSlot(new Slot(1,false));
-		//k.addSlot(new Slot(3,false));
-		//k.rateSlots(k.possessedSlots);
 
-
-		//k.addSlot(new Slot(1,false));
-		//k.printSlots();
-		
-		
 	}
 
 }

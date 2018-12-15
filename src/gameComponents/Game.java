@@ -34,25 +34,36 @@ public class Game {
 	public boolean AGoesFirst() {
 		double chance = Math.random();
 		if (chance > 0.5) {
+			this.a.first = true;
 			return true;
 		}
 		else {
+			this.b.first = true;
 			return false;
 		}
 	}
 	
 	public void startGame() {
+		while(!a.win && !b.win && this.availableSlots.size() > 0) {
 			if (this.aFirst) {
-				System.out.println("a first");
 				AddByPlayerPrior(a);
+				this.exchangeSlotInfo();
+				if(a.checkWin() || b.checkWin()) break;
 				AddByPlayerPrior(b);
+				this.exchangeSlotInfo();
 			}
 			else {
-				System.out.println("b first");
 				AddByPlayerPrior(b);
+				this.exchangeSlotInfo();
+				if(a.checkWin() || b.checkWin()) break;
 				AddByPlayerPrior(a);
+				this.exchangeSlotInfo();
 			}
 		}
+		if(this.availableSlots.size() == 0) {
+			System.out.println("Draw");
+		}
+	}
 	
 	public Slot getSlotByInt(int i) {
 		Slot nul = new Slot(0,false);
@@ -65,14 +76,16 @@ public class Game {
 	}
 	
 	public void AddByPlayerPrior(Player a) {
+		System.out.println("Player " + a.name +"'s turn.");
 		List<Integer> prior = a.SlotPriorities();
-		System.out.println(a.name + " Player priority" + prior);
 		for (Integer i : prior) {
 			if (checkAvail(i)) {
-				a.addSlot(getSlotByInt(i));
 				System.out.println("Player " + a.name + " takes Slot " + i + ".");
+				Slot mov = getSlotByInt(i);
+				this.history.add(mov);
+				printHistory();
+				a.addSlot(mov);
 				this.availableSlots.remove(getSlotByInt(i));
-				System.out.println("size of available slots " + this.availableSlots.size());
 				break;
 			}
 		}
@@ -88,14 +101,25 @@ public class Game {
 		return flag;
 	}
 	
+	public void printHistory() {
+		String hist = "[ ";
+		for (Slot s: this.history) {
+			hist = hist + s.slotPosition + ", "; 
+		}
+		hist = hist + "]";
+		System.out.println(hist);
+	}
+	
+	public void exchangeSlotInfo() {
+		this.a.opponentSlots = this.b.possessedSlots;
+		this.b.opponentSlots = this.a.possessedSlots;
+	}
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		Player a = new Player("a",false);
 		Player b = new Player("b",false);
 		Game k = new Game (a,b);
-		k.startGame();
-		k.startGame();
-		k.startGame();
 		k.startGame();
 	}
 

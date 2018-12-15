@@ -42,26 +42,50 @@ public class Game {
 	}
 	
 	public void startGame() {
-		while (!this.a.win && !this.b.win && this.availableSlots.size() != 0){
 			if (this.aFirst) {
-				this.a.addSlot(getSlotByInt(this.a.selectSlot()));
-				this.b.addSlot(getSlotByInt(this.b.selectSlot()));
+				System.out.println("a first");
+				AddByPlayerPrior(a);
+				AddByPlayerPrior(b);
 			}
 			else {
-				this.b.addSlot(getSlotByInt(this.b.selectSlot()));
-				this.a.addSlot(getSlotByInt(this.a.selectSlot()));
+				System.out.println("b first");
+				AddByPlayerPrior(b);
+				AddByPlayerPrior(a);
+			}
+		}
+	
+	public Slot getSlotByInt(int i) {
+		Slot nul = new Slot(0,false);
+		for (Slot slot: this.availableSlots) {
+			if (slot.slotPosition == i) {
+				return slot;
+			}
+		}
+		return nul;
+	}
+	
+	public void AddByPlayerPrior(Player a) {
+		List<Integer> prior = a.SlotPriorities();
+		System.out.println(a.name + " Player priority" + prior);
+		for (Integer i : prior) {
+			if (checkAvail(i)) {
+				a.addSlot(getSlotByInt(i));
+				System.out.println("Player " + a.name + " takes Slot " + i + ".");
+				this.availableSlots.remove(getSlotByInt(i));
+				System.out.println("size of available slots " + this.availableSlots.size());
+				break;
 			}
 		}
 	}
 	
-	public Slot getSlotByInt(int i) {
-		Slot ans = new Slot(0,false);
-		for (Slot slot: this.availableSlots) {
-			if (slot.slotPosition == i) {
-				ans = slot;
+	public boolean checkAvail (int i) {
+		boolean flag = false;
+		for (Slot s : this.availableSlots) {
+			if (s.slotPosition == i) {
+				flag = true;
 			}
 		}
-		return ans;
+		return flag;
 	}
 	
 	public static void main(String[] args) {
@@ -69,6 +93,10 @@ public class Game {
 		Player a = new Player("a",false);
 		Player b = new Player("b",false);
 		Game k = new Game (a,b);
+		k.startGame();
+		k.startGame();
+		k.startGame();
+		k.startGame();
 	}
 
 }

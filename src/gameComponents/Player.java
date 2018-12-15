@@ -1,5 +1,6 @@
 package gameComponents;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -21,12 +22,16 @@ public class Player {
 		this.opponentSlots = new LinkedList<Slot>();
 	}
 	
-	public void addSlot(Slot slot) {
+	public boolean addSlot(Slot slot) {
 		if (!slot.taken) {
-		this.possessedSlots.add(slot);
-		slot.setTaken(true);
-		this.win = checkWin();
-		System.out.println("Player " + this.name + " took Slot " + slot.slotPosition + ".");
+			this.possessedSlots.add(slot);
+			slot.setTaken(true);
+			this.win = checkWin();
+			System.out.println("Player " + this.name + " took Slot " + slot.slotPosition + ".");
+			return true;
+		}
+		else {
+			return false;
 		}
 	}
 	
@@ -36,8 +41,7 @@ public class Player {
 		}
 	}
 	
-	public boolean checkWin() {
-		boolean flag = false;
+	public Set<Set<Integer>> getWinset (){
 		Set <Set<Integer>> winset = new HashSet<Set<Integer>>();
 		Set <Integer> winset1 = new HashSet<Integer>(); winset1.add(1); winset1.add(2); winset1.add(3);
 		Set <Integer> winset2 = new HashSet<Integer>(); winset2.add(4); winset2.add(5); winset2.add(6);
@@ -46,8 +50,14 @@ public class Player {
 		Set <Integer> winset5 = new HashSet<Integer>(); winset5.add(2); winset5.add(5); winset5.add(8);
 		Set <Integer> winset6 = new HashSet<Integer>(); winset6.add(3); winset6.add(6); winset6.add(9);
 		Set <Integer> winset7 = new HashSet<Integer>(); winset7.add(1); winset7.add(5); winset7.add(9);
-		Set <Integer> winset8 = new HashSet<Integer>(); winset8.add(3); winset8.add(5); winset7.add(7);
+		Set <Integer> winset8 = new HashSet<Integer>(); winset8.add(3); winset8.add(5); winset8.add(7);
 		winset.add(winset1);winset.add(winset2);winset.add(winset3);winset.add(winset4);winset.add(winset5);winset.add(winset6);winset.add(winset7);winset.add(winset8);
+		return winset;
+	}
+	
+	public boolean checkWin() {
+		boolean flag = false;
+		Set <Set<Integer>> winset = getWinset();
 		
 		if (this.possessedSlots.size() >= 3) {
 			Set <Integer> playerSet = new HashSet<Integer>();
@@ -90,41 +100,51 @@ public class Player {
 	}
 	public List<Integer> SlotPriorities() {
 		List<Integer> prior = new LinkedList<Integer>();
+		Set <Set<Integer>> winsets = getWinset();
 		if (this.possessedSlots.size() == 0) { 				//initial move
 			int[] appInWinset = {0,3,2,3,2,4,2,3,2,3};
 			int max = getMax(appInWinset);
-			prior.addAll(PointersByValue(max, appInWinset));
+			for (int i = 0; i < max; i++) {
+				for (Integer a: randomMix(PointersByValue(max - i, appInWinset))){
+					prior.add(a);
+				}
+			}
 		}
 		if (this.possessedSlots.size() == 1) {
-			
+			int max = getMax(this.possessedSlots.get(0).slotRelations());
+			for (int i = 0; i < max; i++) {
+				for (Integer a: randomMix(PointersByValue(max - i, this.possessedSlots.get(0).slotRelations())))
+					prior.add(a);
+				}
+		}
+		if (this.possessedSlots.size() >= 2) {
+			List<Integer> aligned = new LinkedList<Integer>(); 
+			List<Integer> superaligned = new LinkedList<Integer>();
+			for (Slot a : this.possessedSlots) {
+				for (Slot b: this.possessedSlots) {
+					if (!a.equals(b) && isAligned(a,b)) {
+						for (Set<Integer> p : winsets) {
+							if (p.contains(a.slotPosition) && p.contains(b.slotPosition)) {
+								p.remove(a.slotPosition); p.remove(b.slotPosition);
+								for(Integer q: p) {
+									if (aligned.contains(q)) {
+										superaligned.add(q);
+									}
+									else{
+										aligned.add(q);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			prior.addAll(randomMix(superaligned));
+			prior.addAll(randomMix(aligned));
 		}
 		return prior;
 	}
 	
-	
-	public int selectSlot() {
-		if (this.possessedSlots.size() == 0 && this.opponentSlots.size() == 0) { 				//initial move
-			int max = 0;
-			int slotNumber = 0;
-			for (int i = 1; i <= 9; i++) {
-				Slot checker = new Slot (i, false);
-				int [] k = checker.slotRelations();
-				for (int q = 1; q <= 9; q++) {
-					if (max < k[q]) {
-						max = k[q];
-						slotNumber = q;
-					}
-				}
-			}
-			System.out.println("Max val: " + max);
-			return slotNumber;
-		}
-		else {																					//mid-game move
-			int[] myRatings = rateSlots(this.possessedSlots);
-			int[] opponentRatings = rateSlots(this.opponentSlots);
-			return 0;
-		}
-	}
 	
 	public int[] rateSlots(List<Slot> input) {
 		int[] ratings = new int[10];
@@ -162,11 +182,86 @@ public class Player {
 		return max;
 	}
 	
-	public void mixAndAdd(List<Integer> addTo, List<Integer> addThis) {
+	public static List<Integer> randomMix(List<Integer> addThis) {
 		List<Integer> mixer = new LinkedList<Integer>();
-		
+		int initSize = addThis.size();
+		for (int i = 0; i < initSize; i++) {
+			double rand1 = Math.random()*addThis.size();
+			mixer.add(addThis.get((int)rand1));
+			addThis.remove((int)rand1);
+		}
+		return mixer;
 	}
 	
+	public static boolean isAligned (Slot a, Slot b) {
+		boolean flag = false;
+		Set<Integer> setSlots = new HashSet<Integer>();
+		for (int i = 1; i <= 9; i++) {
+			setSlots.add(i);
+		}
+		if (setSlots.contains(a.slotPosition) && setSlots.contains(b.slotPosition)) {
+			if (a.slotPosition == 1) {
+				if(b.slotPosition == 6 || b.slotPosition == 8) {
+				}
+				else {
+					flag = true;
+				}
+			}
+			if (a.slotPosition == 2) {
+				if(b.slotPosition == 4 || b.slotPosition == 6 || b.slotPosition == 7 || b.slotPosition == 9) {
+				}
+				else {
+					flag = true;
+				}
+			}
+			if (a.slotPosition == 3) {
+				if(b.slotPosition == 4 || b.slotPosition == 8) {
+				}
+				else {
+					flag = true;
+				}
+			}
+			if (a.slotPosition == 4) {
+				if(b.slotPosition == 2 || b.slotPosition == 3 || b.slotPosition == 8 || b.slotPosition == 9) {
+				}
+				else {
+					flag = true;
+				}
+			}
+			if (a.slotPosition == 5) {
+					flag = true;
+			}
+			if (a.slotPosition == 6) {
+				if(b.slotPosition == 1 || b.slotPosition == 2 || b.slotPosition == 7 || b.slotPosition == 8) {
+				}
+				else {
+					flag = true;
+				}
+			}
+			if (a.slotPosition == 7) {
+				if(b.slotPosition == 2 || b.slotPosition == 6) {
+				}
+				else {
+					flag = true;
+				}
+			}
+			if (a.slotPosition == 8) {
+				if(b.slotPosition == 1 || b.slotPosition == 4 || b.slotPosition == 3 || b.slotPosition == 6) {
+				}
+				else {
+					flag = true;
+				}
+			}
+			if (a.slotPosition == 9) {
+				if(b.slotPosition == 2 || b.slotPosition == 4) {
+				}
+				else {
+					flag = true;
+				}
+			}
+		}
+		return flag;
+	}
 	
 	
 	public static void main(String[] args) {
@@ -174,12 +269,18 @@ public class Player {
 		Player k = new Player("k",false);
 		k.addSlot(new Slot(5,false));
 		k.addSlot(new Slot(1,false));
+		k.addSlot(new Slot(7,false));
+		k.addSlot(new Slot(8,false));
+		System.out.println(k.SlotPriorities());
+		
+		//k.addSlot(new Slot(1,false));
 		//k.addSlot(new Slot(3,false));
-		k.rateSlots(k.possessedSlots);
+		//k.rateSlots(k.possessedSlots);
 
 
 		//k.addSlot(new Slot(1,false));
 		//k.printSlots();
+		
 		
 	}
 

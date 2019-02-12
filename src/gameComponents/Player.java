@@ -13,7 +13,7 @@ public class Player {
 	LinkedList<Slot> possessedSlots;
 	LinkedList<Slot> opponentSlots;
 	
-	public Player (String name, boolean auto) {
+	public Player (String name) {
 		this.name = name;
 		this.first = false;
 		this.win = false;
